@@ -1,0 +1,9 @@
+{
+    "name": "HPC Matrix Multiply",
+    "build": {
+      "dockerfile": "../Dockerfile"
+    },
+    "settings": {},
+    "extensions": []
+  }
+  
