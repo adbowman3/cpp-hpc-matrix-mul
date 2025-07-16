@@ -1,64 +1,71 @@
 #include <iostream>
 #include <vector>
 #include <cstdlib>  // for rand()
+#include <chrono>
 
-using std::vector;
-using std::string;
-using std::cout;
-using std::atoi;
-
-void fillMatrix(vector<double>& mat, int rows, int cols);
-void printMatrix(const string& name, const vector<double>& mat, int rows, int cols);
-void multiplyMatrices(const vector<double>& A, const vector<double>& B,
-                      vector<double>& C, int rowA, int colA, int colB);
+void fillMatrix(std::vector<double>& mat, int rows, int cols);
+void printMatrix(const std::string& name, const std::vector<double>& mat, int rows, int cols);
+void multiplyMatrices(const std::vector<double>& A, const std::vector<double>& B,
+                      std::vector<double>& C, int rowA, int colA, int colB);
 
 int main(int argc, char* argv[]) {
     if (argc != 4) {
-        cout << "Usage: ./serial <rowA> <colA> <colB>\n";
+        std::cout << "Usage: ./serial <rowA> <colA> <colB>\n";
         return 1;
     }
 
-    int rowA = atoi(argv[1]);
-    int colA = atoi(argv[2]);
-    int colB = atoi(argv[3]);
+    int rowA = std::atoi(argv[1]);
+    int colA = std::atoi(argv[2]);
+    int colB = std::atoi(argv[3]);
     int rowB = colA;
 
-    vector<double> A(rowA * colA);
-    vector<double> B(rowB * colB);
-    vector<double> C(rowA * colB, 0.0);
+    std::vector<double> A(rowA * colA);
+    std::vector<double> B(rowB * colB);
+    std::vector<double> C(rowA * colB, 0.0);
 
     fillMatrix(A, rowA, colA);
     fillMatrix(B, rowB, colB);
 
-    printMatrix("A", A, rowA, colA);
-    printMatrix("B", B, rowB, colB);
+    if (rowA <= 10 && colA <= 10 && colB <= 10) {
+        printMatrix("A", A, rowA, colA);
+        printMatrix("B", B, rowB, colB);
+    }
+
+    auto start = std::chrono::high_resolution_clock::now();
 
     multiplyMatrices(A, B, C, rowA, colA, colB);
 
-    printMatrix("C", C, rowA, colB);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration = end - start;
+
+    if (rowA <= 10 && colA <= 10 && colB <= 10) {
+        printMatrix("C", C, rowA, colB);
+    }
+
+    std::cout << "Time taken for matrix multiplication: " << duration.count() << " seconds\n";
 
     return 0;
 }
 
-void fillMatrix(vector<double>& mat, int rows, int cols) {
+void fillMatrix(std::vector<double>& mat, int rows, int cols) {
     for (int i = 0; i < rows * cols; ++i) {
         mat[i] = static_cast<double>(rand()) / RAND_MAX * 10.0;
     }
 }
 
-void printMatrix(const string& name, const vector<double>& mat, int rows, int cols) {
-    cout << "Matrix " << name << ":\n";
+void printMatrix(const std::string& name, const std::vector<double>& mat, int rows, int cols) {
+    std::cout << "Matrix " << name << ":\n";
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
-            cout << mat[i * cols + j] << " ";
+            std::cout << mat[i * cols + j] << " ";
         }
-        cout << "\n";
+        std::cout << "\n";
     }
-    cout << "\n";
+    std::cout << "\n";
 }
 
-void multiplyMatrices(const vector<double>& A, const vector<double>& B,
-                      vector<double>& C, int rowA, int colA, int colB) {
+void multiplyMatrices(const std::vector<double>& A, const std::vector<double>& B,
+                      std::vector<double>& C, int rowA, int colA, int colB) {
     for (int i = 0; i < rowA; ++i) {
         for (int j = 0; j < colB; ++j) {
             for (int k = 0; k < colA; ++k) {
