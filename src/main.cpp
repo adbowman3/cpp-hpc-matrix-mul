@@ -2,15 +2,21 @@
 #include <vector>
 #include <cstdlib>  // for rand()
 #include <chrono>
+#ifdef _OPENMP
+  #include <omp.h>
+#endif
 
 void fillMatrix(std::vector<double>& mat, int rows, int cols);
 void printMatrix(const std::string& name, const std::vector<double>& mat, int rows, int cols);
 void multiplyMatrices(const std::vector<double>& A, const std::vector<double>& B,
                       std::vector<double>& C, int rowA, int colA, int colB);
+void multiplyMatricesOMP(const std::vector<double>& A, const std::vector<double>& B,
+                      std::vector<double>& C, int rowA, int colA, int colB, int threads);
 
 int main(int argc, char* argv[]) {
-    if (argc != 4) {
-        std::cout << "Usage: ./serial <rowA> <colA> <colB>\n";
+
+    if (argc < 4 || argc > 5) {
+        std::cout << "Usage: ./mm <rowA> <colA> <colB> [threads]\n";
         return 1;
     }
 
@@ -18,10 +24,16 @@ int main(int argc, char* argv[]) {
     int colA = std::atoi(argv[2]);
     int colB = std::atoi(argv[3]);
     int rowB = colA;
+    int threads = 0;
+    if (argc == 5) {
+        threads = std::atoi(argv[4]);
+    }
 
+    std::srand(123);
+    
     std::vector<double> A(rowA * colA);
     std::vector<double> B(rowB * colB);
-    std::vector<double> C(rowA * colB, 0.0);
+    std::vector<double> C(rowA * colB);
 
     fillMatrix(A, rowA, colA);
     fillMatrix(B, rowB, colB);
@@ -31,9 +43,24 @@ int main(int argc, char* argv[]) {
         printMatrix("B", B, rowB, colB);
     }
 
+    bool used_omp = false;
+
+    #ifdef _OPENMP
+    if (threads > 0) omp_set_num_threads(threads);
+    #endif
+
     auto start = std::chrono::high_resolution_clock::now();
 
-    multiplyMatrices(A, B, C, rowA, colA, colB);
+    #ifdef _OPENMP
+    if (threads != 1) {                      // use OMP if available and threads != 1
+        multiplyMatricesOMP(A, B, C, rowA, colA, colB, threads);
+        used_omp = true;
+    }
+    #endif
+
+    if (!used_omp) {                         // otherwise run serial
+        multiplyMatrices(A, B, C, rowA, colA, colB);
+    }
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration = end - start;
@@ -68,9 +95,29 @@ void multiplyMatrices(const std::vector<double>& A, const std::vector<double>& B
                       std::vector<double>& C, int rowA, int colA, int colB) {
     for (int i = 0; i < rowA; ++i) {
         for (int j = 0; j < colB; ++j) {
+            double sum = 0.0;
             for (int k = 0; k < colA; ++k) {
-                C[i * colB + j] += A[i * colA + k] * B[k * colB + j];
+                sum += A[i * colA + k] * B[k * colB + j];
             }
+            C[i * colB + j] = sum;
         }
     }
 }
+
+#ifdef _OPENMP
+void multiplyMatricesOMP(const std::vector<double>& A, const std::vector<double>& B,
+                      std::vector<double>& C, int rowA, int colA, int colB, int threads) {
+    if (threads > 0) omp_set_num_threads(threads);
+    #pragma omp parallel for collapse(2) schedule(static) default(none) \
+        shared(A, B, C, rowA, colA, colB)
+    for (int i = 0; i < rowA; ++i) {
+        for (int j = 0; j < colB; ++j) {
+            double sum = 0.0;
+            for (int k = 0; k < colA; ++k) {
+                sum += A[i * colA + k] * B[k * colB + j];
+            }
+            C[i * colB + j] = sum;
+        }
+    }
+}
+#endif

@@ -1,10 +1,5 @@
 {
   "name": "HPC Matrix Multiply",
-  "build": {
-    "dockerfile": "Dockerfile"
-  },
-  "settings": {},
-  "extensions": [
-    "ms-vscode.cpptools"  // Optional: VS Code C++ extension
-  ]
+  "build": { "dockerfile": "Dockerfile" },
+  "workspaceFolder": "/workspace"
 }

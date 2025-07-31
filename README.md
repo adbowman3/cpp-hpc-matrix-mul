@@ -1,14 +1,26 @@
 # HPC Matrix Multiply
 
-This project benchmarks a simple serial matrix multiplication in C++.
+A minimal C++ matrix multiplication project that demonstrates:
+- A clear serial baseline
+- A parallelversion using OpenMP
 
 ## Steps
 
-- `main_serial.cpp` implements a basic NxN matrix multiply.
-- Next: parallelize with OpenMP.
+- `main.cpp` implements a basic NxN matrix multiply.
+- Next:
 
-## Build & Run
-
+## Build
+### Serial
 ```bash
-g++ -o serial main_serial.cpp
-./serial
+g++ -O3 src/main.cpp -o matmul_serial
+
+### Parallel
+'''bash
+g++ -O3 -fopenmp src/main.cpp -o matmul_parallel
+
+## Run
+### Serial
+./matmul_serial <# rows in matrix A> <# columns in matrix A> <# columns in matrix B>
+
+### Parallel
+./matmul_parallel <# rows in matrix A> <# columns in matrix A> <# columns in matrix B> [# thread]
