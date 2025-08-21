@@ -2,12 +2,11 @@
 
 A minimal C++ matrix multiplication project that demonstrates:
 - A clear serial baseline
-- A parallelversion using OpenMP
+- A parallel version using OpenMP
 
 ## Steps
 
 - `main.cpp` implements a basic NxN matrix multiply.
-- Next:
 
 ## Build
 ### Serial
