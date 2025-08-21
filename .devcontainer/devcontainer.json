@@ -1,5 +1,0 @@
-{
-  "name": "HPC Matrix Multiply",
-  "build": { "dockerfile": "Dockerfile" },
-  "workspaceFolder": "/workspace"
-}

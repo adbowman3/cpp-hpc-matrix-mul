@@ -1,17 +1,12 @@
 #include <iostream>
 #include <vector>
-#include <cstdlib>  // for rand()
+#include <cstdlib>
 #include <chrono>
-#ifdef _OPENMP
-  #include <omp.h>
-#endif
 
 void fillMatrix(std::vector<double>& mat, int rows, int cols);
 void printMatrix(const std::string& name, const std::vector<double>& mat, int rows, int cols);
 void multiplyMatrices(const std::vector<double>& A, const std::vector<double>& B,
                       std::vector<double>& C, int rowA, int colA, int colB);
-void multiplyMatricesOMP(const std::vector<double>& A, const std::vector<double>& B,
-                      std::vector<double>& C, int rowA, int colA, int colB, int threads);
 
 int main(int argc, char* argv[]) {
 
@@ -43,24 +38,11 @@ int main(int argc, char* argv[]) {
         printMatrix("B", B, rowB, colB);
     }
 
-    bool used_omp = false;
-
-    #ifdef _OPENMP
-    if (threads > 0) omp_set_num_threads(threads);
-    #endif
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    #ifdef _OPENMP
-    if (threads != 1) {                      // use OMP if available and threads != 1
-        multiplyMatricesOMP(A, B, C, rowA, colA, colB, threads);
-        used_omp = true;
-    }
-    #endif
 
-    if (!used_omp) {                         // otherwise run serial
-        multiplyMatrices(A, B, C, rowA, colA, colB);
-    }
+    multiplyMatrices(A, B, C, rowA, colA, colB);
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> duration = end - start;
@@ -103,21 +85,3 @@ void multiplyMatrices(const std::vector<double>& A, const std::vector<double>& B
         }
     }
 }
-
-#ifdef _OPENMP
-void multiplyMatricesOMP(const std::vector<double>& A, const std::vector<double>& B,
-                      std::vector<double>& C, int rowA, int colA, int colB, int threads) {
-    if (threads > 0) omp_set_num_threads(threads);
-    #pragma omp parallel for collapse(2) schedule(static) default(none) \
-        shared(A, B, C, rowA, colA, colB)
-    for (int i = 0; i < rowA; ++i) {
-        for (int j = 0; j < colB; ++j) {
-            double sum = 0.0;
-            for (int k = 0; k < colA; ++k) {
-                sum += A[i * colA + k] * B[k * colB + j];
-            }
-            C[i * colB + j] = sum;
-        }
-    }
-}
-#endif
